@@ -1,18 +1,5 @@
-`include "alu_interfaces.sv"
-
-module full_adder_cla (
-    input a, b, c_in,
-    output sum, c_out
-);
-    // generate propagate and generate bits
-    bit Pi, Gi;
-    // Assign to the relevant variables
-    assign Pi   =   a ^ b;
-    assign Gi   =   a & b;
-    assign sum  =   Pi ^ c_in;
-    assign c_out=   Gi | (Pi & c_in);
-
-endmodule
+// uncomment the bottom line if not using testbench
+// `include "adder64_if.sv"
 
 module adder64 (
     adder64_if.inst if0
