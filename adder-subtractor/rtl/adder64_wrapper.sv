@@ -13,8 +13,8 @@ module adder64_wrapper (
 		if0.op1	=	op1;
 		if0.op2	=	op2;
 		if0.carry_in	=	carry_in;
-		if0.result	=	result;
-		if0.carry_out	=	carry_out;
+		result = if0.result;
+		carry_out = if0.carry_out;
 	end
 
 	adder64 inst0 (if0.inst);
