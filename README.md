@@ -18,11 +18,11 @@ The repository consists of several directories containing the RTL and testbench 
 
     Switch to the `tb` directory in the core you wish to simulate and run,
 
-    $~~~~$ `make MODULE_NAME:=<module_name> simulate`
+        `make MODULE_NAME:=<module_name> simulate`
 
     The executable will be generated inside `obj_dir`. You can run it by typing,
 
-    $~~~~$ `make MODULE_NAME:=<module_name> run`
+        `make MODULE_NAME:=<module_name> run`
 
     Optionally, clean the directory using,
-    $~~~~$ `make clean` 
+        `make clean`
