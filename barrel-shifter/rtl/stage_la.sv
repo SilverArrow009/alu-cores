@@ -1,5 +1,5 @@
 module stage_la #(parameter SHAMT = 1)(
-    stage_if.inst if0
+    stage_if if0
 );
     logic [127:0] shift_bus;
     always_comb begin : shift_left_arithmetic

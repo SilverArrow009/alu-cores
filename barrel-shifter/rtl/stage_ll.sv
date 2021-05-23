@@ -1,5 +1,5 @@
 module stage_ll #(parameter SHAMT = 1) (
-    stage_if.inst if0
+    stage_if if0
 );
     logic [127:0] shift_bus = 'h0;
     always_comb begin
