@@ -1,5 +1,5 @@
 module barrel_shifter64 (
-    barrel_shifter64_if.inst if0
+    barrel_shifter64_if iface0
 );
     // interfaces for shifters
     shifter_if ll_if, rl_if, la_if, ra_if;
@@ -13,26 +13,26 @@ module barrel_shifter64 (
     // Assign the signals
 
     always_comb begin : shift_selector
-        case (if0.shift_type)
+        case (iface0.shift_type)
             2'b00: begin
-                ll_if.in = if0.in;
-                ll_if.shift_amount = if0.shift_amount;
-                if0.result = ll_if.result;
+                ll_if.in = iface0.in;
+                ll_if.shift_amount = iface0.shift_amount;
+                iface0.result = ll_if.result;
             end 
             2'b01: begin
-                rl_if.in = if0.in;
-                rl_if.shift_amount = if0.shift_amount;
-                if0.result = rl_if.result;
+                rl_if.in = iface0.in;
+                rl_if.shift_amount = iface0.shift_amount;
+                iface0.result = rl_if.result;
             end 
             2'b10: begin
-                la_if.in = if0.in;
-                la_if.shift_amount = if0.shift_amount;
-                if0.result = la_if.result;
+                la_if.in = iface0.in;
+                la_if.shift_amount = iface0.shift_amount;
+                iface0.result = la_if.result;
             end 
             2'b11: begin
-                ra_if.in = if0.in;
-                ra_if.shift_amount = if0.shift_amount;
-                if0.result = ra_if.result;
+                ra_if.in = iface0.in;
+                ra_if.shift_amount = iface0.shift_amount;
+                iface0.result = ra_if.result;
             end 
         endcase
     end
