@@ -1,4 +1,4 @@
-module stage_la #(parameter shamt = 1)(
+module stage_la #(parameter SHAMT = 1)(
     stage_if.inst if0
 );
     logic [127:0] shift_bus;
@@ -8,7 +8,7 @@ module stage_la #(parameter shamt = 1)(
         else
             shift_bus = '0;
         if (if0.sig) begin
-                shift_bus[63+shamt:shamt] = if0.in;
+                shift_bus[63+SHAMT:SHAMT] = if0.in;
                 if0.out = shift_bus[63:0];
             end
         else
