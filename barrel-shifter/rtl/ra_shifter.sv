@@ -1,4 +1,4 @@
-module ll_shifter (
+module ra_shifter (
     shifter_if.inst shift_if
 );
     stage_if if0, if1, if2, if3, if4, if5;
