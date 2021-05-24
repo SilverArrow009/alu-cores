@@ -8,21 +8,22 @@ This repository contains the SystemVerilog implementations of various 64-bit ari
 
 For now, the focus is on building and testing the cores with `verilator` using C++ testbenches. You can know more about `verilator` [here](https://www.veripool.org/verilator/).
 
-## Instructions
+## Core documentation
 
 The repository consists of several directories containing the RTL and testbench code corresponding to each core as listed below.
 
-- `adder_subtractor` : 64-bit Adder-Subtractor core  
+- `adder_subtractor` : 64-bit Adder-Subtractor core
 
-    ### Simulating and running the core
+- `barrel-shifter` : 64-bit Barrel shifter core  
 
-    Switch to the `tb` directory in the core you wish to simulate and run,
+## Simulating and running the core
 
-        `make MODULE_NAME:=<module_name> simulate`
+Switch to the `tb` directory in the core you wish to simulate and run,
 
-    The executable will be generated inside `obj_dir`. You can run it by typing,
+    make MODULE_NAME:=<module_name> simulate
 
-        `make MODULE_NAME:=<module_name> run`
+The executable will be generated inside `obj_dir`. You can run it by typing,
 
-    Optionally, clean the directory using,
-        `make clean`
+    make MODULE_NAME:=<module_name> run
+
+Optionally, clean the directory using `make clean`
