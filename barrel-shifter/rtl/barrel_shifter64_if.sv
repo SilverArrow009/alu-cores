@@ -1,7 +1,7 @@
 interface barrel_shifter64_if;
     logic [63:0] in;    
     logic [5:0] shift_amount;
-    bit [1:0] shift_type;
+    bit [2:0] shift_type;
     logic [63:0] result;
 
     modport inst (
