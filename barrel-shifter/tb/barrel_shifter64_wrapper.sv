@@ -1,7 +1,7 @@
 module barrel_shifter64_wrapper (
 	input     logic [63:0]      in,
 	input     logic [5:0]  shift_amount,
-	input     bit [1:0]  shift_type,
+	input     bit [2:0]  shift_type,
 	output     logic [63:0]  result
 );
 
