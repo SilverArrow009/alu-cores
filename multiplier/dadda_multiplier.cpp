@@ -21,7 +21,12 @@ vector<int> d;
 class Column
 {
     public :
-        Column::Column(unsigned col_depth){
+        // Overloading the constructor while preserving the default one
+        Column(){
+
+        }
+
+        Column(unsigned col_depth){
             col.resize(col_depth);
             column_depth = col_depth;
         }
@@ -107,7 +112,7 @@ class Column
 
 class Tree {
     public :    
-        Tree::Tree(int size, vector<bool> op1, vector<bool> op2) {
+        Tree(int size, vector<bool> op1, vector<bool> op2) {
             multiplier_size = size;
             int i;
             for (i = 0; i <= size; i++)
@@ -177,10 +182,10 @@ class Tree {
 // Drive the code
 
 int main() {
-    vector<bool> op1(4) = {0,0,0,1};
-    vector<bool> op2(4) = {1,0,1,0};
+    vector<bool> op1{0,0,0,1};
+    vector<bool> op2{1,0,1,0};
     int size = 4;
-    Tree mul_tree = new Tree(size, op1, op2);
+    Tree mul_tree = Tree(size, op1, op2);
     // Initialize the tree
     mul_tree.initialize();
     // Populate the d-vector
