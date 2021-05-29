@@ -1,6 +1,7 @@
 #include<vector>
 #include<bitset>
 #include<iostream>
+#include<cmath>
 
 using namespace std;
 
@@ -74,12 +75,13 @@ class Column
         void use_full_adders(int n_full_adders) {
             bool carry;
             cout << "\t\tinserting full adders at positions : ";
-            for (int i = 0; i < n_full_adders; i++)
+            col_carry_out.clear();
+            for (int i = 0; i < n_full_adders; i+=3)
             {
-                cout << 3*i << " ";
+                cout << i << " ";
                 carry = (bool) (((int)col[i+1] & (int) col[i+2]) | (((int)col[i+1] ^ (int) col[i+2]) & (int) col[i])); // c_out = Gi + Pi . Ci
                 col[i] = (bool)((int)col[i] ^ (int)col[i+1] ^ (int)col[i+2]); // sum = Pi ^ c_in
-                col.erase(col.begin()+i+2, col.begin()+i+4);
+                col.erase(col.begin()+i+1, col.begin()+i+3);
                 col_carry_out.push_back(carry);
             }
             cout << endl;
@@ -90,12 +92,13 @@ class Column
         void use_half_adders(int n_half_adders, int origin) {
             bool carry;
             cout << "\t\tinserting half adders at positions : ";
+            col_carry_out.clear();
             for (int i = 0; i < n_half_adders; i+=2)
             {
                 cout << origin + i << " ";
                 carry = (bool) (((int)col[i] & (int) col[i+1])); // c_out = Gi + Pi . Ci
                 col[i] = (bool)((int)col[i] ^ (int)col[i+1]); // sum = Pi
-                col.erase(col.begin()+i+2, col.begin()+i+3);
+                col.erase(col.begin()+i+1, col.begin()+i+2);
                 col_carry_out.push_back(carry);
             }
             cout << endl;
@@ -108,7 +111,7 @@ class Tree {
         Tree(int size, vector<bool> op1, vector<bool> op2) {
             multiplier_size = size;
             int i;
-            for (i = 1; i <= size; i++)
+            for (i = 1; i < size; i++)
             {
                 generate_col_sizes.push_back(i);
             }
@@ -118,7 +121,7 @@ class Tree {
             }
             multiplicand.resize(size); multiplicand = op1;
             multiplier.resize(size); multiplier = op2;
-            column_array.resize(2*size);
+            column_array.resize(2*size-1);
         }
 
         int multiplier_size;
@@ -132,7 +135,7 @@ class Tree {
             int i = 0;
             vector<Column>::iterator colarray_it = column_array.begin();
             vector<unsigned>::iterator colsize_it = generate_col_sizes.begin();
-            while (i < 2*multiplier_size)
+            while (i < 2*multiplier_size-1)
             {
                 *colarray_it = Column(*colsize_it);
                 // Insert the population logic here
@@ -154,9 +157,12 @@ class Tree {
                     column_array[i].compress(stage);
                     // Add the resulting carry to the next column
                     column_array[i+1].add(column_array[i].col_carry_out);
+                    cout << ""; //debug
                 } else {
+                    cout << "\tIn column " << i << " :" << endl;
                     //Compress the final column
                     column_array[i].compress(stage);
+                    cout << ""; //debug
                 }
             }
             
@@ -166,8 +172,15 @@ class Tree {
         // Define a scheme to write to each column
         vector<bool> generate_col_values (int weight) {
             vector<bool> result;
+            int j;
             for (int i=0; i <= weight; i++) {
-                result.push_back(multiplier[i] && multiplicand[weight - i]);
+                j = weight - i;
+                if (i < multiplier.size() && j < multiplier.size())
+                {
+                    result.push_back(multiplier[i] && multiplicand[j]);                    
+                } else{
+                    continue;
+                }
             }
             return result;
         } 
@@ -176,19 +189,34 @@ class Tree {
 // Drive the code
 
 int main() {
-    vector<bool> op1{0,0,0,1};
+    vector<bool> op1{1,1,1,1};
     vector<bool> op2{1,0,1,0};
-    int size = 4;
+    int size = op1.size();
     Tree mul_tree = Tree(size, op1, op2);
     // Initialize the tree
     mul_tree.initialize();
     // Populate the d-vector
     d = generate_d(size);
+    int number_stages = d.size();
     // Run the Dadda algorithm
-    for (int i = 0; i < d.size(); i++)
+    for (int i = 0; i < number_stages; i++)
     {
         mul_tree.step(i);
+        d.pop_back();
     }
-    // Any cleanup task goes here
+    // verification of algorithm
+    unsigned result1 = 0;
+    unsigned result2 = 0;
+    for (int i = 0; i < mul_tree.column_array.size(); i++)
+    {
+        if(i == 0) {
+            result1 += mul_tree.column_array[i].col[0]; 
+        } else {
+            result1 += pow(2,i) * mul_tree.column_array[i].col[0];
+            result2 += pow(2,i) * mul_tree.column_array[i].col[1]; 
+        }
+    }
+    unsigned product = result1 + result2;
+    cout << "Product is : " << product << endl;
     return 0;
 }
