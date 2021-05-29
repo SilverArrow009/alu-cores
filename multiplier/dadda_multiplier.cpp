@@ -10,6 +10,7 @@ vector<int> generate_d(int limit) {
     d.push_back(2);
     while (true) {
         if(*d.rbegin() >= limit ) {
+            d.pop_back();
             return d;
     }
         d.push_back(3 * (*d.rbegin()) / 2); 
@@ -51,15 +52,20 @@ class Column
             int compress_threshold = *d.rbegin();
             int compress_amount = (col.size() - compress_threshold);
             unsigned n_full_adders, n_half_adders, n_carry;
-            if (compress_amount < 0) {
+            if (compress_amount <= 0) {
+                cout << "\t\tNo optimization required" << endl;
                 return;
             } else {
                 n_full_adders = compress_amount / 2;
                 n_half_adders = compress_amount - 2*n_full_adders;
                 n_carry = n_full_adders + n_half_adders;
-                cout << "Full adders utilized :" << n_full_adders << ", Half adders utilized : " << n_half_adders << " ,carries generated : " << n_carry << endl;
-                use_full_adders(n_full_adders);
-                use_half_adders(n_half_adders, 3*n_full_adders);
+                cout << "\t\tFull adders utilized :" << n_full_adders << ", Half adders utilized : " << n_half_adders << ", carries generated : " << n_carry << endl;
+                if (n_full_adders !=0) {
+                    use_full_adders(n_full_adders);
+                }
+                if (n_half_adders != 0) {
+                    use_half_adders(n_half_adders, 3*n_full_adders);
+                }
             }
         }
     
@@ -67,40 +73,32 @@ class Column
         // Full adder compression logic
         void use_full_adders(int n_full_adders) {
             bool carry;
-            if (n_full_adders)
+            cout << "\t\tinserting full adders at positions : ";
+            for (int i = 0; i < n_full_adders; i++)
             {
-                return;
-            } else {
-                cout << "inserting full adders at positions : ";
-                for (int i = 0; i < n_full_adders; i++)
-                {
-                    cout << 3*i << ", ";
-                    carry = (bool) (((int)col[i+1] & (int) col[i+2]) | (((int)col[i+1] ^ (int) col[i+2]) & (int) col[i])); // c_out = Gi + Pi . Ci
-                    col[i] = (bool)((int)col[i] ^ (int)col[i+1] ^ (int)col[i+2]); // sum = Pi ^ c_in
-                    col.erase(col.begin()+i+2, col.begin()+i+4);
-                    col_carry_out.push_back(carry);
-                }
+                cout << 3*i << " ";
+                carry = (bool) (((int)col[i+1] & (int) col[i+2]) | (((int)col[i+1] ^ (int) col[i+2]) & (int) col[i])); // c_out = Gi + Pi . Ci
+                col[i] = (bool)((int)col[i] ^ (int)col[i+1] ^ (int)col[i+2]); // sum = Pi ^ c_in
+                col.erase(col.begin()+i+2, col.begin()+i+4);
+                col_carry_out.push_back(carry);
             }
+            cout << endl;
             return;
         }
 
        // Half adder compression logic
         void use_half_adders(int n_half_adders, int origin) {
             bool carry;
-            if (n_half_adders)
+            cout << "\t\tinserting half adders at positions : ";
+            for (int i = 0; i < n_half_adders; i+=2)
             {
-                return;
-            } else {
-                cout << "inserting half adders at positions : ";
-                for (int i = origin; i < n_half_adders; i+=2)
-                {
-                    cout << i << ", ";
-                    carry = (bool) (((int)col[i] & (int) col[i+1])); // c_out = Gi + Pi . Ci
-                    col[i] = (bool)((int)col[i] ^ (int)col[i+1]); // sum = Pi
-                    col.erase(col.begin()+i+2, col.begin()+i+3);
-                    col_carry_out.push_back(carry);
-                }
+                cout << origin + i << " ";
+                carry = (bool) (((int)col[i] & (int) col[i+1])); // c_out = Gi + Pi . Ci
+                col[i] = (bool)((int)col[i] ^ (int)col[i+1]); // sum = Pi
+                col.erase(col.begin()+i+2, col.begin()+i+3);
+                col_carry_out.push_back(carry);
             }
+            cout << endl;
             return;
         }
 };
@@ -147,10 +145,11 @@ class Tree {
         }
 
         void step(int stage) {
-            cout << "In stage " << stage << ":" << endl;
+            cout << "In stage " << stage << ":\n" << endl;
             for (int i = 0; i < column_array.size(); i++)
             {
                 if (i != column_array.size()-1) {
+                    cout << "\tIn column " << i << " :" << endl;
                     // Compress the column
                     column_array[i].compress(stage);
                     // Add the resulting carry to the next column
