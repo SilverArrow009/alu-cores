@@ -36,18 +36,13 @@ class Column
         
         // Add elements at the beginning 
         void add(vector<bool> x) {
-            for(int i=1; i <= x.size(); i++) {
-                col.insert(col.begin() + i, x[i-1]);
-            }
+            col.insert(col.begin(), x.begin(), x.end());
             return;
         }
 
         // Write the entire column
         void write(vector<bool> x) {
-            for (int i = 1; i <= col.size(); i++)
-            {
-                col.insert(col.begin() + i, x[i-1]);
-            }
+            col = x;
             return;
         }
 
@@ -115,11 +110,11 @@ class Tree {
         Tree(int size, vector<bool> op1, vector<bool> op2) {
             multiplier_size = size;
             int i;
-            for (i = 0; i <= size; i++)
+            for (i = 1; i <= size; i++)
             {
                 generate_col_sizes.push_back(i);
             }
-            for (; i <= 2*size; i++)
+            for (; i >= 1; i--)
             {
                 generate_col_sizes.push_back(i);
             }
