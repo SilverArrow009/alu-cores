@@ -50,6 +50,7 @@ class Column
 
         // Compress the column
         void compress(int stage) {
+            col_carry_out.clear();
             int compress_threshold = *d.rbegin();
             int compress_amount = (col.size() - compress_threshold);
             unsigned n_full_adders, n_half_adders, n_carry;
@@ -75,7 +76,6 @@ class Column
         void use_full_adders(int n_full_adders) {
             bool carry;
             cout << "\t\tinserting full adders at positions : ";
-            col_carry_out.clear();
             for (int i = 0; i < n_full_adders; i+=3)
             {
                 cout << i << " ";
@@ -92,7 +92,6 @@ class Column
         void use_half_adders(int n_half_adders, int origin) {
             bool carry;
             cout << "\t\tinserting half adders at positions : ";
-            col_carry_out.clear();
             for (int i = 0; i < n_half_adders; i+=2)
             {
                 cout << origin + i << " ";
@@ -189,8 +188,8 @@ class Tree {
 // Drive the code
 
 int main() {
-    vector<bool> op1{1,1,1,1};
-    vector<bool> op2{1,0,1,0};
+    vector<bool> op1(7,1);
+    vector<bool> op2(7,1);
     int size = op1.size();
     Tree mul_tree = Tree(size, op1, op2);
     // Initialize the tree
@@ -205,8 +204,8 @@ int main() {
         d.pop_back();
     }
     // verification of algorithm
-    unsigned result1 = 0;
-    unsigned result2 = 0;
+    unsigned long result1 = 0;
+    unsigned long result2 = 0;
     for (int i = 0; i < mul_tree.column_array.size(); i++)
     {
         if(i == 0) {
@@ -216,7 +215,7 @@ int main() {
             result2 += pow(2,i) * mul_tree.column_array[i].col[1]; 
         }
     }
-    unsigned product = result1 + result2;
+    unsigned long product = result1 + result2;
     cout << "Product is : " << product << endl;
     return 0;
 }
