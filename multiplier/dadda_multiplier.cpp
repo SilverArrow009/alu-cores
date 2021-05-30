@@ -66,7 +66,7 @@ class Column
                     use_full_adders(n_full_adders);
                 }
                 if (n_half_adders != 0) {
-                    use_half_adders(n_half_adders, 3*n_full_adders);
+                    use_half_adders(n_half_adders, n_full_adders);
                 }
             }
         }
@@ -76,9 +76,9 @@ class Column
         void use_full_adders(int n_full_adders) {
             bool carry;
             cout << "\t\tinserting full adders at positions : ";
-            for (int i = 0; i < n_full_adders; i+=3)
+            for (int i = 0; i < n_full_adders; i++)
             {
-                cout << i << " ";
+                cout << 3*i << " ";
                 carry = (bool) (((int)col[i+1] & (int) col[i+2]) | (((int)col[i+1] ^ (int) col[i+2]) & (int) col[i])); // c_out = Gi + Pi . Ci
                 col[i] = (bool)((int)col[i] ^ (int)col[i+1] ^ (int)col[i+2]); // sum = Pi ^ c_in
                 col.erase(col.begin()+i+1, col.begin()+i+3);
@@ -92,12 +92,14 @@ class Column
         void use_half_adders(int n_half_adders, int origin) {
             bool carry;
             cout << "\t\tinserting half adders at positions : ";
+            int j;
             for (int i = 0; i < n_half_adders; i+=2)
             {
-                cout << origin + i << " ";
-                carry = (bool) (((int)col[i] & (int) col[i+1])); // c_out = Gi + Pi . Ci
-                col[i] = (bool)((int)col[i] ^ (int)col[i+1]); // sum = Pi
-                col.erase(col.begin()+i+1, col.begin()+i+2);
+                cout << 3*origin + i << " ";
+                j = origin + i;
+                carry = (bool) (((int)col[j] & (int) col[j+1])); // c_out = Gi + Pi . Ci
+                col[j] = (bool)((int)col[j] ^ (int)col[j+1]); // sum = Pi
+                col.erase(col.begin()+j+1, col.begin()+j+2);
                 col_carry_out.push_back(carry);
             }
             cout << endl;
@@ -188,8 +190,8 @@ class Tree {
 // Drive the code
 
 int main() {
-    vector<bool> op1(7,1);
-    vector<bool> op2(7,1);
+    vector<bool> op1(32,1);
+    vector<bool> op2(32,1);
     int size = op1.size();
     Tree mul_tree = Tree(size, op1, op2);
     // Initialize the tree
