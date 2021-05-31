@@ -1,9 +1,14 @@
 #include<vector>
-#include<bitset>
+#include<fstream>
 #include<iostream>
 #include<cmath>
 
+#define NO_VERIFY
+
 using namespace std;
+
+// Open the file to write the report for parsing
+ofstream fout("dadda_multiplier_summary.txt");
 
 // Generate the series of threshold 'd'
 vector<int> generate_d(int limit) {
@@ -55,13 +60,13 @@ class Column
             int compress_amount = (col.size() - compress_threshold);
             unsigned n_full_adders, n_half_adders, n_carry;
             if (compress_amount <= 0) {
-                cout << "\t\tNo optimization required" << endl;
+                fout << "\t\t\tNo optimization required" << endl;
                 return;
             } else {
                 n_full_adders = compress_amount / 2;
                 n_half_adders = compress_amount - 2*n_full_adders;
                 n_carry = n_full_adders + n_half_adders;
-                cout << "\t\tFull adders utilized :" << n_full_adders << ", Half adders utilized : " << n_half_adders << ", carries generated : " << n_carry << endl;
+                fout << "\t\t\tFull adders utilized :" << n_full_adders << ", Half adders utilized : " << n_half_adders << ", carries generated : " << n_carry << endl;
                 if (n_full_adders !=0) {
                     use_full_adders(n_full_adders);
                 }
@@ -75,34 +80,34 @@ class Column
         // Full adder compression logic
         void use_full_adders(int n_full_adders) {
             bool carry;
-            cout << "\t\tinserting full adders at positions : ";
+            fout << "\t\t\tInserting full adders at positions : ";
             for (int i = 0; i < n_full_adders; i++)
             {
-                cout << 3*i << " ";
+                fout << 3*i << " ";
                 carry = (bool) (((int)col[i+1] & (int) col[i+2]) | (((int)col[i+1] ^ (int) col[i+2]) & (int) col[i])); // c_out = Gi + Pi . Ci
                 col[i] = (bool)((int)col[i] ^ (int)col[i+1] ^ (int)col[i+2]); // sum = Pi ^ c_in
                 col.erase(col.begin()+i+1, col.begin()+i+3);
                 col_carry_out.push_back(carry);
             }
-            cout << endl;
+            fout << endl;
             return;
         }
 
        // Half adder compression logic
         void use_half_adders(int n_half_adders, int origin) {
             bool carry;
-            cout << "\t\tinserting half adders at positions : ";
+            fout << "\t\t\tInserting half adders at positions : ";
             int j;
             for (int i = 0; i < n_half_adders; i+=2)
             {
-                cout << 3*origin + i << " ";
+                fout << 3*origin + i << " ";
                 j = origin + i;
                 carry = (bool) (((int)col[j] & (int) col[j+1])); // c_out = Gi + Pi . Ci
                 col[j] = (bool)((int)col[j] ^ (int)col[j+1]); // sum = Pi
                 col.erase(col.begin()+j+1, col.begin()+j+2);
                 col_carry_out.push_back(carry);
             }
-            cout << endl;
+            fout << endl;
             return;
         }
 };
@@ -149,21 +154,21 @@ class Tree {
         }
 
         void step(int stage) {
-            cout << "In stage " << stage << ":\n" << endl;
+            fout << "\tIn stage " << stage << ":" << endl;
             for (int i = 0; i < column_array.size(); i++)
             {
                 if (i != column_array.size()-1) {
-                    cout << "\tIn column " << i << " :" << endl;
+                    fout << "\t\tIn column " << i << " :" << endl;
                     // Compress the column
                     column_array[i].compress(stage);
                     // Add the resulting carry to the next column
                     column_array[i+1].add(column_array[i].col_carry_out);
-                    cout << ""; //debug
+                    fout << ""; //debug
                 } else {
-                    cout << "\tIn column " << i << " :" << endl;
+                    fout << "\t\tIn column " << i << " :" << endl;
                     //Compress the final column
                     column_array[i].compress(stage);
-                    cout << ""; //debug
+                    fout << ""; //debug
                 }
             }
             
@@ -187,11 +192,19 @@ class Tree {
         } 
 };
 
+// Log max sizes of the columns
+void log_max_size_cols (Tree mul_tree, vector<unsigned> &max_cols_sizes) {
+    for (int i = 0; i < mul_tree.column_array.size(); i++)
+    {
+        max_cols_sizes[i] = (max_cols_sizes[i] < mul_tree.column_array[i].col.size()) ? mul_tree.column_array[i].col.size() : max_cols_sizes[i];
+    }
+}
+
 // Drive the code
 
 int main() {
-    vector<bool> op1(32,1);
-    vector<bool> op2(32,1);
+    vector<bool> op1(4,1);
+    vector<bool> op2(4,1);
     int size = op1.size();
     Tree mul_tree = Tree(size, op1, op2);
     // Initialize the tree
@@ -199,12 +212,29 @@ int main() {
     // Populate the d-vector
     d = generate_d(size);
     int number_stages = d.size();
+    // Initialize the max size cols
+    vector<unsigned> max_size_cols(2*size-1);
+    log_max_size_cols(mul_tree, max_size_cols);
+    fout << "#REG_POS" << endl;
     // Run the Dadda algorithm
     for (int i = 0; i < number_stages; i++)
     {
+        // Step through the algortihm
         mul_tree.step(i);
+        // Update the max cols after each step
+        log_max_size_cols(mul_tree, max_size_cols);
         d.pop_back();
+        fout << endl;
     }
+    fout << "\n#REG_SIZES"<< endl;
+
+    for (int i = 0; i < max_size_cols.size(); i++)
+    {
+        fout << "\tMax size of register at column " << i << " : " << max_size_cols[i] << endl;
+    }
+    
+    #ifndef NO_VERIFY
+
     // verification of algorithm
     unsigned long result1 = 0;
     unsigned long result2 = 0;
@@ -218,6 +248,9 @@ int main() {
         }
     }
     unsigned long product = result1 + result2;
-    cout << "Product is : " << product << endl;
+    fout << "Product is : " << product << endl;
+
+    #endif
+    fout.close();
     return 0;
 }
