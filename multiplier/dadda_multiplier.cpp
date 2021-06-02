@@ -60,13 +60,13 @@ class Column
             int compress_amount = (col.size() - compress_threshold);
             unsigned n_full_adders, n_half_adders, n_carry;
             if (compress_amount <= 0) {
-                fout << "\t\t\tNo optimization required" << endl;
+                fout << "No optimization required\n" << endl;
                 return;
             } else {
                 n_full_adders = compress_amount / 2;
                 n_half_adders = compress_amount - 2*n_full_adders;
                 n_carry = n_full_adders + n_half_adders;
-                fout << "\t\t\tFull adders utilized :" << n_full_adders << ", Half adders utilized : " << n_half_adders << ", carries generated : " << n_carry << endl;
+                // fout << "Full adders utilized :" << n_full_adders << ", Half adders utilized : " << n_half_adders << ", carries generated : " << n_carry << endl;
                 if (n_full_adders !=0) {
                     use_full_adders(n_full_adders);
                 }
@@ -80,7 +80,7 @@ class Column
         // Full adder compression logic
         void use_full_adders(int n_full_adders) {
             bool carry;
-            fout << "\t\t\tInserting full adders at positions : ";
+            fout << "Inserting full adders at positions : ";
             for (int i = 0; i < n_full_adders; i++)
             {
                 fout << 3*i << " ";
@@ -89,14 +89,14 @@ class Column
                 col.erase(col.begin()+i+1, col.begin()+i+3);
                 col_carry_out.push_back(carry);
             }
-            fout << endl;
+            fout << "\n" << endl;
             return;
         }
 
        // Half adder compression logic
         void use_half_adders(int n_half_adders, int origin) {
             bool carry;
-            fout << "\t\t\tInserting half adders at positions : ";
+            fout << "Inserting half adders at positions : ";
             int j;
             for (int i = 0; i < n_half_adders; i+=2)
             {
@@ -107,7 +107,7 @@ class Column
                 col.erase(col.begin()+j+1, col.begin()+j+2);
                 col_carry_out.push_back(carry);
             }
-            fout << endl;
+            fout << "\n" << endl;
             return;
         }
 };
@@ -154,18 +154,18 @@ class Tree {
         }
 
         void step(int stage) {
-            fout << "\tIn stage " << stage << ":" << endl;
+            // fout << "In stage " << stage << ":" << endl;
             for (int i = 0; i < column_array.size(); i++)
             {
                 if (i != column_array.size()-1) {
-                    fout << "\t\tIn column " << i << " :" << endl;
+                    fout << "In column : " << i << endl;
                     // Compress the column
                     column_array[i].compress(stage);
                     // Add the resulting carry to the next column
                     column_array[i+1].add(column_array[i].col_carry_out);
                     fout << ""; //debug
                 } else {
-                    fout << "\t\tIn column " << i << " :" << endl;
+                    fout << "In column : " << i << endl;
                     //Compress the final column
                     column_array[i].compress(stage);
                     fout << ""; //debug
@@ -215,7 +215,6 @@ int main() {
     // Initialize the max size cols
     vector<unsigned> max_size_cols(2*size-1);
     log_max_size_cols(mul_tree, max_size_cols);
-    fout << "#REG_POS" << endl;
     // Run the Dadda algorithm
     for (int i = 0; i < number_stages; i++)
     {
@@ -224,13 +223,11 @@ int main() {
         // Update the max cols after each step
         log_max_size_cols(mul_tree, max_size_cols);
         d.pop_back();
-        fout << endl;
     }
-    fout << "\n#REG_SIZES"<< endl;
 
     for (int i = 0; i < max_size_cols.size(); i++)
     {
-        fout << "\tMax size of register at column " << i << " : " << max_size_cols[i] << endl;
+        fout << "Max size of register at column : " << i << " : " << max_size_cols[i] << endl << endl;
     }
     
     #ifndef NO_VERIFY
