@@ -8,6 +8,7 @@ BEGIN {
 {
     if ($1 ~ /In column.*/) {
         split($1, temp, ":");
+        gsub(" ", "", temp[2]);
         if($NF == "No optimization required") {
             full_adder_pos[temp[2]] = full_adder_pos[temp[2]] " NIL";
             half_adder_pos[temp[2]] = half_adder_pos[temp[2]] " NIL";
@@ -74,10 +75,10 @@ function gen_verilog() {
     indent[line_number] = 0 " " 0;
     lines[line_number++] = "module dadda_multiplier ("
     indent[line_number] = line_number " " 1;
-    lines[line_number++] = "logic[" (size-1) ":0] op1,"
-    lines[line_number++] = "logic[" (size-1) ":0] op2,"
-    lines[line_number++] = "logic clk,"
-    lines[line_number++] = "logic[" (2*size-1) ":0] result"
+    lines[line_number++] = "input logic[" (size-1) ":0] op1,"
+    lines[line_number++] = "input logic[" (size-1) ":0] op2,"
+    lines[line_number++] = "input logic clk,"
+    lines[line_number++] = "output logic[" (2*size-1) ":0] result"
     indent[line_number] = line_number " " 0;
     lines[line_number++] = ");\n"
     indent[line_number] = line_number " " 1;
@@ -87,12 +88,38 @@ function gen_verilog() {
     for (col in max_sizes_cols) {
         lines[line_number++] = "logic[" max_sizes_cols[col] - 1 ":0] col_" col ";"
     }
+    lines[line_number++] = "\n";
+    lines[line_number++] = "// Define the full adders and corresponding wires here";
+    for (col in full_adder_pos) {
+        split(full_adder_pos[col], temp, " ");
+        for (pos in temp) {
+            if (temp[pos] == "NIL") {
+                continue;
+            }
+            lines[line_number++] = "logic fa_sum_" col "_" temp[pos] ";" ;
+            lines[line_number++] = "logic fa_cout_" col "_" temp[pos] ";" ;
+            lines[line_number++] = "full_adder fa_" col "_" temp[pos] "(.a(col_" col "[" temp[pos] "]), .b(col_" col "[" temp[pos]+1 "]), .cin(col_" col "[" temp[pos]+2 "]), .sum(fa_sum_" col "_" temp[pos] "), .cout(fa_cout_" col "_" temp[pos] "));" ;   
+        }
+    }
+    lines[line_number++] = "\n";
+    lines[line_number++] = "// Define the half adders and corresponding wires here";
+    for (col in half_adder_pos) {
+        split(half_adder_pos[col], temp, " ");
+        for (pos in temp) {
+            if (temp[pos] == "NIL") {
+                continue;
+            }
+            lines[line_number++] = "logic ha_sum_" col "_" temp[pos] ";" ;
+            lines[line_number++] = "logic ha_cout_" col "_" temp[pos] ";" ;
+            lines[line_number++] = "half_adder ha_" col "_" temp[pos] "(.a(col_" col "[" temp[pos] "]), .b(col_" col "[" temp[pos]+1 "]), .sum(ha_sum_" col "_" temp[pos] "), .cout(ha_cout_" col "_" temp[pos] "));" ;   
+        }
+    }
     lines[line_number++] = "\n"; 
     lines[line_number++] = "// Initialize the columns";
-    lines[line_number++] = "always_latch begin : initialize";
+    lines[line_number++] = "always_comb begin : initialize";
     indent[line_number] = line_number " " 2;
     for (col in max_sizes_cols) {
-        lines[line_number++] = "col_" col " <= " initialize(col) ";"
+        lines[line_number++] = "col_" col " = " initialize(col) ";"
     }
     indent[line_number] = line_number " " 1;
     lines[line_number++] =  "end\n"
