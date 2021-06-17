@@ -3,13 +3,19 @@
 BEGIN {
     RS = "\n\n"
     FS = "\n"
+    cycle = 0;
 }
 
 {
     if ($1 ~ /In column.*/) {
         split($1, temp, ":");
         gsub(" ", "", temp[2]);
+        if (temp[2] == "0") {
+            cycle++;
+        }
         if($NF == "No optimization required") {
+            full_adder_cyc[cycle "_" temp[2]] = full_adder_cyc[cycle "_" temp[2]] " NIL";
+            half_adder_cyc[cycle "_" temp[2]] = half_adder_cyc[cycle "_" temp[2]] " NIL";
             full_adder_pos[temp[2]] = full_adder_pos[temp[2]] " NIL";
             half_adder_pos[temp[2]] = half_adder_pos[temp[2]] " NIL";
             NR++;
@@ -17,8 +23,10 @@ BEGIN {
             split($NF, temp1, ":");
             if ($NF ~ ".*half adders.*") {
                 half_adder_pos[temp[2]] = half_adder_pos[temp[2]] " " temp1[2];
+                half_adder_cyc[cycle "_" temp[2]] = temp1[2];
             } else if ($NF ~ ".*full adders.*") {
                 full_adder_pos[temp[2]] = full_adder_pos[temp[2]] " " temp1[2];
+                full_adder_cyc[cycle "_" temp[2]] = temp1[2];
             }
         }
     } else if ($1 ~ "Max size of.*") {
@@ -30,6 +38,10 @@ BEGIN {
 }
 
 END {
+    total_cycles = cycle;
+    # for (i in full_adder_cyc) {
+    #     print i " : " full_adder_cyc[i]; 
+    # }
     for(column in full_adder_pos) {
         full_adder_pos[column] = uniq(full_adder_pos[column]);
         half_adder_pos[column] = uniq(half_adder_pos[column]);
@@ -67,6 +79,87 @@ function initialize (weight,    str) {
     }
     sub(",", "", str);
     str = "{" str " }";
+    return str;
+}
+
+function update (cycle, col,   str) {
+    str = "";
+    curr_col = "col_" col;
+    new_col = "{ "
+    split(full_adder_cyc[cycle "_" col], temp_sum_full, " ");
+    split(half_adder_cyc[cycle "_" col], temp_sum_half, " ");
+    split(full_adder_cyc[cycle "_" col-1], temp_carry_full, " ");
+    split(half_adder_cyc[cycle "_" col-1], temp_carry_half, " ");
+
+    for (i in  temp_carry_full) {
+        if(temp_carry_full[i] == "NIL") {
+            continue;
+        }
+        new_col = new_col "fa_cout_" col-1 "_" i ", ";
+    }
+
+    for (i in  temp_carry_half) {
+        if(temp_carry_half[i] == "NIL") {
+            continue;
+        }
+        new_col = new_col "ha_cout_" col-1 "_" i ", ";
+    }
+    
+    # if (temp_sum_full[1] == "NIL") {
+    #     print col, temp_sum_full[1]
+    #     new_col = new_col "col_" col "[0:" temp_sum_full[2]-1 "], "; 
+    # }
+
+    for (i in  temp_sum_full) {
+        if(temp_sum_full[i] == "NIL" || temp_sum_full[i] == "") {
+            continue;
+        }
+        new_col = new_col "fa_sum_" col "_" temp_sum_full[i] ", ";
+        if (temp_sum_full[length(temp_sum_full)] == max_sizes_cols[col]-3) {
+            continue;
+        } else {
+            new_col = new_col "col_" col "[" temp_sum_full[i]+3 ":";
+        }
+        if (i < length(temp_sum_full)) {
+            new_col = new_col temp_sum_full[i+1] "], ";
+        }
+    }
+
+    if (length(temp_sum_full) > 1 && (temp_sum_half[1] != "NIL" || temp_sum_half[1] != "")) {
+        new_col = new_col temp_sum_half[1]-1 "], ";
+    }
+    
+    for (i in  temp_sum_half) {
+        if(temp_sum_half[i] == "NIL" || temp_sum_half[i] == "") {
+            continue;
+        }
+        new_col = new_col "ha_sum_" col "_" temp_sum_half[i] ", ";
+        new_col = new_col "col_" col "[" temp_sum_half[i]+2 ":";
+        if (i < length(temp_sum_half)) {
+            new_col = new_col temp_sum_half[i+1] "], ";
+        }
+    }
+
+    if (temp_sum_half[length(temp_sum_half)] < max_sizes_cols[col] - 1 && temp_sum_half[length(temp_sum_half)] != "NIL" && temp_sum_half[length(temp_sum_half)] != "" ) {
+        new_col = new_col max_sizes_cols[col]-1 "], ";
+    } else if (temp_sum_half[length(temp_sum_half)] == "NIL" || temp_sum_half[length(temp_sum_half)] == "") {
+        if (temp_sum_full[length(temp_sum_full)] == "NIL" || temp_sum_full[length(temp_sum_full)] == "") {
+            new_col = new_col "col_" col ", ";
+        } else {
+            if (temp_sum_full[length(temp_sum_full)] != max_sizes_cols[col]-3) {
+                new_col = new_col max_sizes_cols[col]-1 "], ";
+            }
+        }
+    }
+
+    new_col = new_col "}"
+    sub(", }", " }", new_col);
+    if (new_col == "{ }") {
+        str = "col_" col " <= col_" col ";";
+    } else {
+        str = "col_" col " <= " new_col ";";
+    }
+
     return str;
 }
 
@@ -124,7 +217,23 @@ function gen_verilog() {
     indent[line_number] = line_number " " 1;
     lines[line_number++] =  "end\n"
     lines[line_number++] = "// Step through the algorithm"
-    # lines[line_number++] = 
+    lines[line_number++] = "always_ff @(posedge clk) begin : stage"
+    indent[line_number] = line_number " " 2;
+    lines[line_number++] = "case (counter)";
+    indent[line_number] = line_number " " 3;
+    for (cyc=1; cyc<=total_cycles; cyc++) {
+        lines[line_number++] = "4'd" cyc ": begin";
+        indent[line_number] = line_number " " 4;
+        for (col in max_sizes_cols) {
+            lines[line_number++] = update(cyc, col); 
+        }
+        indent[line_number] = line_number " " 3;
+        lines[line_number++] = "end";
+    }
+    indent[line_number] = line_number " " 2;
+    lines[line_number++] = "endcase";
+    indent[line_number] = line_number " " 1;
+    lines[line_number++] = "end"
     # lines[line_number++] = 
     # lines[line_number++] = 
     # lines[line_number++] = 
