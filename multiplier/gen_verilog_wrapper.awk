@@ -257,6 +257,8 @@ function gen_verilog() {
     sub(", }", ", 1'b0 }", pp2);
     lines[line_number++] = "pp1 <= " pp1 ";";
     lines[line_number++] = "pp2 <= " pp2 ";";
+    lines[line_number++] = "// Instantiate your adder modules here by replacing the following line";
+    lines[line_number++] = "result <= pp1 + pp2;";
     indent[line_number] = line_number " " 2; 
     lines[line_number++] = "end"
     indent[line_number] = line_number " " 1;
