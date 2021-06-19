@@ -95,20 +95,15 @@ function update (cycle, col,   str) {
         if(temp_carry_full[i] == "NIL") {
             continue;
         }
-        new_col = new_col "fa_cout_" col-1 "_" i ", ";
+        new_col = new_col "fa_cout_" col-1 "_" temp_carry_full[i] ", ";
     }
 
     for (i in  temp_carry_half) {
         if(temp_carry_half[i] == "NIL") {
             continue;
         }
-        new_col = new_col "ha_cout_" col-1 "_" i ", ";
+        new_col = new_col "ha_cout_" col-1 "_" temp_carry_half[i] ", ";
     }
-    
-    # if (temp_sum_full[1] == "NIL") {
-    #     print col, temp_sum_full[1]
-    #     new_col = new_col "col_" col "[0:" temp_sum_full[2]-1 "], "; 
-    # }
 
     for (i in  temp_sum_full) {
         if(temp_sum_full[i] == "NIL" || temp_sum_full[i] == "") {
@@ -171,15 +166,19 @@ function gen_verilog() {
     lines[line_number++] = "input logic[" (size-1) ":0] op1,"
     lines[line_number++] = "input logic[" (size-1) ":0] op2,"
     lines[line_number++] = "input logic clk,"
+    lines[line_number++] = "output logic valid,"
     lines[line_number++] = "output logic[" (2*size-1) ":0] result"
     indent[line_number] = line_number " " 0;
     lines[line_number++] = ");\n"
     indent[line_number] = line_number " " 1;
-    lines[line_number++] = "// Define a counter"
-    lines[line_number++] = "bit [3:0] counter;"
+    lines[line_number++] = "// Define a counter";
+    lines[line_number++] = "bit [" int(log(total_cycles)/log(2)) ":0] counter;";
+    lines[line_number++] = "// Define partial products here";
+    lines[line_number++] = "bit [" (2*size-2) ":0] pp1;";
+    lines[line_number++] = "bit [" (2*size-2) ":0] pp2;";
     lines[line_number++] = "// Define the registers here"
     for (col in max_sizes_cols) {
-        lines[line_number++] = "logic[" max_sizes_cols[col] - 1 ":0] col_" col ";"
+        lines[line_number++] = "logic[0:" max_sizes_cols[col] - 1 "] col_" col ";"
     }
     lines[line_number++] = "\n";
     lines[line_number++] = "// Define the full adders and corresponding wires here";
@@ -222,22 +221,46 @@ function gen_verilog() {
     lines[line_number++] = "case (counter)";
     indent[line_number] = line_number " " 3;
     for (cyc=1; cyc<=total_cycles; cyc++) {
-        lines[line_number++] = "4'd" cyc ": begin";
+        lines[line_number++] = "4'd" cyc-1 ": begin";
         indent[line_number] = line_number " " 4;
         for (col in max_sizes_cols) {
             lines[line_number++] = update(cyc, col); 
+        }
+        if (cyc == total_cycles) {
+            lines[line_number++] = "// Assert a valid bit"
+            lines[line_number++] = "valid <= 1'b1;"
         }
         indent[line_number] = line_number " " 3;
         lines[line_number++] = "end";
     }
     indent[line_number] = line_number " " 2;
     lines[line_number++] = "endcase";
+    lines[line_number++] = "counter <= counter + 1;"
     indent[line_number] = line_number " " 1;
+    lines[line_number++] = "end\n"
+    lines[line_number++] = "// Calculate the product"
+    lines[line_number++] = "always_latch begin"
+    indent[line_number] = line_number " " 2;
+    lines[line_number++] = "if (valid == 1'b1) begin"
+    indent[line_number] = line_number " " 3;
+    pp1 = "{ "; pp2 = "{ ";
+    asorti(max_sizes_cols, sorted_cols, "@ind_num_desc");
+    for (col in sorted_cols) {
+        pp1 = pp1 "col_" sorted_cols[col] "[0], "
+        if (sorted_cols[col] != 0) {
+            pp2 = pp2 "col_" sorted_cols[col] "[1], "            
+        }
+    }
+    pp1 = pp1 "}";
+    pp2 = pp2 "}";
+    sub(", }", " }", pp1);
+    sub(", }", ", 1'b0 }", pp2);
+    lines[line_number++] = "pp1 <= " pp1 ";";
+    lines[line_number++] = "pp2 <= " pp2 ";";
+    indent[line_number] = line_number " " 2; 
     lines[line_number++] = "end"
-    # lines[line_number++] = 
-    # lines[line_number++] = 
-    # lines[line_number++] = 
-    # lines[line_number++] = 
+    indent[line_number] = line_number " " 1;
+    lines[line_number++] = "end\n";
     # lines[line_number++] = 
     # lines[line_number++] = 
     indent[line_number] = line_number " " 0;
