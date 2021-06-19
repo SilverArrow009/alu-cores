@@ -211,7 +211,7 @@ function gen_verilog() {
     lines[line_number++] = "always_comb begin : initialize";
     indent[line_number] = line_number " " 2;
     for (col in max_sizes_cols) {
-        lines[line_number++] = "col_" col " = " initialize(col) ";"
+        lines[line_number++] = "col_" col " = " initialize(int(col)) ";"
     }
     indent[line_number] = line_number " " 1;
     lines[line_number++] =  "end\n"
