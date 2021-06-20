@@ -129,7 +129,7 @@ function update (cycle, col,   str) {
                 new_col = new_col "fa_sum_" col "_" temp_sum_full[i] ", ";
             } else {
                 # If no
-                if(temp_sum_half[i] == "NIL" || temp_sum_half[i] == "") {
+                if(temp_sum_half[1] == "NIL" || temp_sum_half[1] == "") {
                     if (temp_sum_full[i] < max_sizes_cols[col]-3) {
                             new_col = new_col "fa_sum_" col "_" temp_sum_full[i] ", col_" col "[" temp_sum_full[i]+3 ":" max_sizes_cols[col]-1 "]";
                         }
