@@ -60,7 +60,7 @@ class Column
             int compress_amount = (col.size() - compress_threshold);
             unsigned n_full_adders, n_half_adders, n_carry;
             if (compress_amount <= 0) {
-                fout << "No optimization required\n" << endl;
+                fout << "No optimization required" << endl;
                 return;
             } else {
                 n_full_adders = compress_amount / 2;
@@ -89,7 +89,7 @@ class Column
                 col.erase(col.begin()+i+1, col.begin()+i+3);
                 col_carry_out.push_back(carry);
             }
-            fout << "\n" << endl;
+            fout << endl;
             return;
         }
 
@@ -107,7 +107,7 @@ class Column
                 col.erase(col.begin()+j+1, col.begin()+j+2);
                 col_carry_out.push_back(carry);
             }
-            fout << "\n" << endl;
+            fout << endl;
             return;
         }
 };
@@ -163,12 +163,12 @@ class Tree {
                     column_array[i].compress(stage);
                     // Add the resulting carry to the next column
                     column_array[i+1].add(column_array[i].col_carry_out);
-                    fout << ""; //debug
+                    fout << endl; //debug
                 } else {
                     fout << "In column : " << i << endl;
                     //Compress the final column
                     column_array[i].compress(stage);
-                    fout << ""; //debug
+                    fout << endl; //debug
                 }
             }
             
@@ -203,8 +203,8 @@ void log_max_size_cols (Tree mul_tree, vector<unsigned> &max_cols_sizes) {
 // Drive the code
 
 int main() {
-    vector<bool> op1(4,1);
-    vector<bool> op2(4,1);
+    vector<bool> op1(8,1);
+    vector<bool> op2(8,1);
     int size = op1.size();
     Tree mul_tree = Tree(size, op1, op2);
     // Initialize the tree
